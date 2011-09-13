@@ -60,6 +60,17 @@ class SDatabase extends CI_Model{
 			return NULL;
 		}
 	}
+	public function LocationGetByID($data){
+		$sql = sprintf("select * from `Location` where `LocationID` = %d",
+			$data["LocationID"]
+		);
+		$ret = $this->db->query($sql);
+		if ($ret->num_rows() > 0){
+			return $ret->result_array();
+		}else{
+			return NULL;
+		}
+	}
 	public function TripInsertDB($data){
 		// it won't check the duplicate trip, every trip will be treat as a new trip
 	
@@ -86,6 +97,28 @@ class SDatabase extends CI_Model{
 			//$this->db->query($sql);
 			return -1;
 		}*/
+	}
+	public function TripGetList($data){
+		// get the TripID
+		$sql = sprintf("
+			select `TripID`, `name`, `StartTime`, `EndTime` 
+			from `Trip` 
+			where `UID` = '%s'", 
+			$data["UID"]);
+		
+		$ret = $this->db->query($sql);
+		if ($ret->num_rows() > 0){
+			return $ret->result_array();
+		}else {
+			return NULL;
+		}
+	}
+	public function TripUpdateDB($TripID, $data){
+		$where = "`TripID` = ".$TripID;
+		$sql = $this->db->update_string("Trip", $data, $where);
+		//echo $sql;
+		$this->db->query($sql);
+		return ;
 	}
 	public function ScenicInsertDB($data){
 		// it won't check the duplicate Scenic, every Scenic will be treat as a new one	

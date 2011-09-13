@@ -21,7 +21,7 @@ class Schedule extends CI_Controller {
 		
 		if ( !isset($_POST["name"]) || !isset($_POST["start_time"]) 
 			|| !isset($_POST["end_time"]) || !isset($_POST["uid"]) ) {
-				$ret_array["error_msg"] = "please specify the name, start_time, end time and uid in post mothed";
+				$ret_array["error_msg"] = "please specify the name, start_time, end time and uid in post method";
 				echo json_encode($ret_array);
 				return false;
 			}
@@ -52,6 +52,95 @@ class Schedule extends CI_Controller {
 			return true;
 		}
 
+	}
+	function get_trips(){
+		// get trips with specify UID and it will echo ret_array object
+		// ret_array contain result(true / false), TripList, 
+		// or sometimes with error_msg 
+		
+		$ret_array["result"] = false;
+		$ret_array["TripList"] = NULL;
+		
+		
+		$fields[0] = "uid";
+		
+		if ($this->check_post_field($ret_array, $fields) == false){
+			return false;
+		}
+		
+		$data = array(
+			"UID" => $_POST["uid"]
+		);
+		/* 
+		$data = array(
+			"UID" => $_GET["uid"]
+		);*/
+		$this->load->model("SDatabase");
+		$ret = $this->SDatabase->TripGetList($data);
+		if ($ret == NULL){
+			$ret_array["error_msg"] = 
+				sprintf("Trips of the uid %s not found", $data["UID"]);
+			echo json_encode($ret_array);
+			return false;	
+		}else{
+			$ret_array["result"] = true;
+			$ret_array["TripList"] = $ret;
+			echo json_encode($ret_array);
+			return true;
+		}
+	}
+	function update_trips(){
+		// update trips with TripIDs and it will echo ret_array object
+		// ret_array contain result(true / false), 
+		// or sometimes with error_msg 
+		
+		$ret_array["result"] = false;
+		
+		$fields[0] = "num";
+		
+		if ($this->check_post_field($ret_array, $fields) == false){
+			return false;
+		}
+		
+		$num = intval($_POST["num"]);
+		for($i = 1;$i<=$num;$i++){
+			$fields[] = "trip_id_".$i;
+			$fields[] = "name_".$i;
+			$fields[] = "start_".$i;
+			$fields[] = "end_".$i;
+		}
+		if ($this->check_post_field($ret_array, $fields) == false){
+			return false;
+		}
+		
+		
+		//insert
+		$this->load->model("SDatabase");
+		 
+		//$num = intval($_GET["num"]);
+		for($i = 1;$i<=$num;$i++){
+			
+			$TripID = $_POST["trip_id_".$i];
+			$data = array(
+				"name" => $_POST["name_".$i],
+				"StartTime" => $_POST["start_".$i],
+				"EndTime" => $_POST["end_".$i]
+			);
+			
+			/*
+			$TripID = $_GET["trip_id_".$i];
+			$data = array(
+				"name" => $_GET["name_".$i],
+				"StartTime" => $_GET["start_".$i],
+				"EndTime" => $_GET["end_".$i]
+			);
+			*/
+			$this->SDatabase->TripUpdateDB($TripID, $data);
+		}
+		
+		$ret_array["result"] = true;
+		echo json_encode($ret_array);
+		return true;
 	}
 	function get_scenics(){
 		// get scenics with specify TripID and it will echo ret_array object
@@ -207,7 +296,7 @@ class Schedule extends CI_Controller {
 	private function check_post_field($ret_array, $fields){
 		foreach($fields as $i => $name)
 		if ( !isset($_POST[$name]) ){
-			$ret_array["error_msg"] = "please specify the $name in post mothed";
+			$ret_array["error_msg"] = "please specify the $name in post method";
 			echo json_encode($ret_array);
 			return false;
 		}

@@ -18,7 +18,7 @@ class Location extends CI_Controller {
 		
 		if (!isset($_POST["name"]) || !isset($_POST["latitude"]) 
 			|| !isset($_POST["longitude"]) ){
-				$ret_array["error_msg"] = "please specify the name, latitude, longitude in post mothed";
+				$ret_array["error_msg"] = "please specify the name, latitude, longitude in post method";
 				echo json_encode($ret_array);
 				return false;
 			}
@@ -54,7 +54,7 @@ class Location extends CI_Controller {
 		$ret_array["list"] = NULL;
 		
 		if (!isset($_POST["latitude"]) || !isset($_POST["longitude"])){
-			$ret_array["error_msg"] = "please specify latitude, longitude in post mothed";
+			$ret_array["error_msg"] = "please specify latitude, longitude in post method";
 			echo json_encode($ret_array);
 			return false;
 		}
@@ -89,7 +89,37 @@ class Location extends CI_Controller {
 		}
 	}
 	function get_by_id(){
+		$ret_array["result"] = false;
+		$ret_array["list"] = NULL;
 		
+		$fields[0] = "LocationID";
+		
+		
+		if ($this->check_post_field($ret_array, $fields) == false){
+			return false;
+		}
+				
+		$data = array(
+			"LocationID" => intval($_POST["LocationID"])
+		);
+		/*
+		$data = array(
+			"LocationID" => intval($_GET["LocationID"])
+		);
+		*/
+		
+		$this->load->model("SDatabase");
+		$ret = $this->SDatabase->LocationGetByID($data);
+		if ($ret == NULL){
+			$ret_array["error_msg"] = "Location not found";
+			echo json_encode($ret_array);
+			return false;
+		}else{
+			$ret_array["list"] = $ret;
+			$ret_array["result"] = true;
+			echo json_encode($ret_array);
+			return true;
+		}
 	}
 	function check_login(){
 		// non-complete
@@ -99,6 +129,14 @@ class Location extends CI_Controller {
 			return false;
 		}else {
 			return true;
+		}
+	}
+	private function check_post_field($ret_array, $fields){
+		foreach($fields as $i => $name)
+		if ( !isset($_POST[$name]) ){
+			$ret_array["error_msg"] = "please specify the $name in post method";
+			echo json_encode($ret_array);
+			return false;
 		}
 	}
 }
