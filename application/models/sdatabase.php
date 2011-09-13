@@ -103,7 +103,7 @@ class SDatabase extends CI_Model{
 	public function ScenicGetList($data){
 		// get the TripID
 		$sql = sprintf("
-			select `ScenicID`, `LocationID`, `StartTime`, `EndTime`, `Money` 
+			select `ScenicID`, `LocationID`, `StartTime`, `EndTime`, `Money`, `Note` 
 			from `Scenic` 
 			where `TripID` = '%s'", 
 			$data["TripID"]);

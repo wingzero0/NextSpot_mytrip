@@ -13,6 +13,9 @@ class Schedule extends CI_Controller {
 		}
 	}
 	function create(){
+		// create trip and it will echo ret_array object
+		// ret_array contain result flag, TripID, or sometimes with error_msg 
+		
 		$ret_array["result"] = false;
 		$ret_array["TripID"] = -1;
 		
@@ -51,6 +54,10 @@ class Schedule extends CI_Controller {
 
 	}
 	function get_scenics(){
+		// get scenics with specify TripID and it will echo ret_array object
+		// ret_array contain result(true / false), ScenicList, 
+		// or sometimes with error_msg 
+		
 		$ret_array["result"] = false;
 		$ret_array["ScenicList"] = NULL;
 		
@@ -83,6 +90,10 @@ class Schedule extends CI_Controller {
 	}
 	
 	function create_scenics(){
+		// create scenics with specify TripID and it will echo ret_array object
+		// ret_array contain result(true / false), ScenicIDList, 
+		// or sometimes with error_msg 
+		
 		$ret_array["result"] = false;
 		$ret_array["ScenicIDList"] = NULL;
 		
@@ -98,6 +109,7 @@ class Schedule extends CI_Controller {
 			$fields[] = "start_".$i;
 			$fields[] = "end_".$i;
 			$fields[] = "money_".$i;
+			$fields[] = "note_".$i;
 		}
 		if ($this->check_post_field($ret_array, $fields) == false){
 			return false;
@@ -115,7 +127,8 @@ class Schedule extends CI_Controller {
 				"LocationID" => $_POST["location_id_".$i],
 				"StartTime" => $_POST["start_".$i],
 				"EndTime" => $_POST["end_".$i],
-				"Money" => $_POST["money_".$i]
+				"Money" => $_POST["money_".$i],
+				"Note" => $_POST["note_".$i]
 			);
 			/*
 			$data = array(
@@ -123,7 +136,8 @@ class Schedule extends CI_Controller {
 				"LocationID" => $_GET["location_id_".$i],
 				"StartTime" => $_GET["start_".$i],
 				"EndTime" => $_GET["end_".$i],
-				"Money" => $_GET["money_".$i]
+				"Money" => $_GET["money_".$i],
+				"Note" => $_GET["note_".$i]
 			);*/
 			$ret_array["ScenicIDList"][$i] = $this->SDatabase->ScenicInsertDB($data);
 		}
@@ -133,6 +147,10 @@ class Schedule extends CI_Controller {
 		return true;
 	}
 	function update_scenics(){
+		// update scenics with ScenicIDs and it will echo ret_array object
+		// ret_array contain result(true / false), 
+		// or sometimes with error_msg 
+		
 		$ret_array["result"] = false;
 		//$ret_array["ScenicIDList"] = NULL;
 		
@@ -148,6 +166,7 @@ class Schedule extends CI_Controller {
 			$fields[] = "start_".$i;
 			$fields[] = "end_".$i;
 			$fields[] = "money_".$i;
+			$fields[] = "note_".$i;
 		}
 		if ($this->check_post_field($ret_array, $fields) == false){
 			return false;
@@ -159,21 +178,23 @@ class Schedule extends CI_Controller {
 		 
 		//$num = intval($_GET["num"]);
 		for($i = 1;$i<=$num;$i++){
-			/*
+			
 			$ScenicID = $_POST["scenic_id_".$i];
 			$data = array(
 				"LocationID" => $_POST["location_id_".$i],
 				"StartTime" => $_POST["start_".$i],
 				"EndTime" => $_POST["end_".$i],
-				"Money" => $_POST["money_".$i]
-			);*/
+				"Money" => $_POST["money_".$i],
+				"Note" => $_POST["note_".$i]
+			);
 			/*
 			$ScenicID = $_GET["scenic_id_".$i];
 			$data = array(
 				"LocationID" => $_GET["location_id_".$i],
 				"StartTime" => $_GET["start_".$i],
 				"EndTime" => $_GET["end_".$i],
-				"Money" => $_GET["money_".$i]
+				"Money" => $_GET["money_".$i],
+				"Note" => $_GET["note_".$i]
 			);*/
 			$this->SDatabase->ScenicUpdateDB($ScenicID, $data);
 			//$ret_array["ScenicIDList"][$i] = $this->SDatabase->ScenicInsertDB($data);
