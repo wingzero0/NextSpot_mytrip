@@ -138,6 +138,7 @@ class Location extends CI_Controller {
 			echo json_encode($ret_array);
 			return false;
 		}
+		return true;
 	}
 }
 /* End of file welcome.php */

@@ -75,6 +75,7 @@ class Schedule extends CI_Controller {
 		$data = array(
 			"UID" => $_GET["uid"]
 		);*/
+		
 		$this->load->model("SDatabase");
 		$ret = $this->SDatabase->TripGetList($data);
 		if ($ret == NULL){
@@ -300,6 +301,7 @@ class Schedule extends CI_Controller {
 			echo json_encode($ret_array);
 			return false;
 		}
+		return true;
 	}
 	function check_login(){
 		// non-complete
