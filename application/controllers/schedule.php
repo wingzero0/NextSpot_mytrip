@@ -3,10 +3,11 @@
 class Schedule extends CI_Controller {
 	function __construct(){
 		parent::__construct();
+		$this->load->model('Login_Model');
 		$ret_array["result"] = false;
 		$ret_array["TripID"] = -1;
 		
-		if ($this->check_login() == false){
+		if ($this->Login_Model->_isLogin() == false){
 			$ret_array["error_msg"] = "incorrect login";
 			echo json_encode($ret_array);
 			die();
@@ -302,16 +303,6 @@ class Schedule extends CI_Controller {
 			return false;
 		}
 		return true;
-	}
-	function check_login(){
-		// non-complete
-		return true; // for test
-		if (!isset($_SESSION["login"]) || $_SESSION["login"] !==true){ 
-			//echo "login first\n<br>";
-			return false;
-		}else {
-			return true;
-		}
 	}
 }
 ?>

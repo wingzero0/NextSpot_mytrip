@@ -4,7 +4,7 @@ class SDatabase extends CI_Model{
 		parent::__construct();
 		$this->load->database();
 	}
-	public function LocationInsertDB($info){
+	public function LocationInsertDB($info){// no security issue
 		// lock table and check duplicate first
 		$sql = "lock table `Location` write";
 		$this->db->query($sql);
@@ -41,7 +41,7 @@ class SDatabase extends CI_Model{
 		}
 	}
 	
-	public function LocationGetList($data){
+	public function LocationGetList($data){// no security issue
 		$u_lat = $data["latitude"] + $data["bound"];
 		$l_lat = $data["latitude"] - $data["bound"];
 		$u_long = $data["longitude"] + $data["bound"];
@@ -60,7 +60,7 @@ class SDatabase extends CI_Model{
 			return NULL;
 		}
 	}
-	public function LocationGetByID($data){
+	public function LocationGetByID($data){// no security issue
 		$sql = sprintf("select * from `Location` where `LocationID` = %d",
 			$data["LocationID"]
 		);
@@ -71,32 +71,12 @@ class SDatabase extends CI_Model{
 			return NULL;
 		}
 	}
-	public function TripInsertDB($data){
+	public function TripInsertDB($data){//no security issue
 		// it won't check the duplicate trip, every trip will be treat as a new trip
 	
 		// insert new record
 		$this->db->insert("Trip", $data);
 		return $this->db->insert_id();
-		// get the TripID
-		/*
-		$sql = sprintf("
-			select `TripID` from `Trip` 
-			where `UID` = '%s' and `name` = '%s' 
-			and `StartTime` = '%s' and `EndTime` = '%s'
-			order by `TripID` desc
-			limit 1", 
-			$data["UID"], $data["name"], $data["StartTime"], $data["EndTime"]);
-		
-		$ret = $this->db->query($sql);
-		if ($row = $ret->row()){
-			//$sql = "unlock tables";
-			//$this->db->query($sql);
-			return $row->TripID;
-		}else {
-			//$sql = "unlock tables";
-			//$this->db->query($sql);
-			return -1;
-		}*/
 	}
 	public function TripGetList($data){
 		// get the TripID
@@ -147,6 +127,35 @@ class SDatabase extends CI_Model{
 		}else {
 			return NULL;
 		}
+	}
+	public function FBaccountInsertDB($info){
+		// lock table and check duplicate first
+		$sql = "lock table `User` write";
+		$this->db->query($sql);
+		
+		$sql = sprintf("select * from `User` where `ExternalID` = '%s'", $info["id"]);
+		$ret = $this->db->query($sql);
+		
+		if ($row = $ret->row()){
+			$NSid = $row->ID;
+			//if the record already exists, just skip the insertion and return 
+			$sql = "unlock tables";
+			$this->db->query($sql);
+			return $NSid;
+		}
+		
+		$insert_data = array(
+			"Name" => $info["name"],
+			"IDType" => 1, // 1 means FB account.
+			"ExternalID" => $info["id"]
+		);
+		$this->db->insert("User", $insert_data);
+		$NSid = $this->db->insert_id();
+		
+		$sql = "unlock tables";
+		$this->db->query($sql);
+			
+		return $NSid;
 	}
 }
 ?>
