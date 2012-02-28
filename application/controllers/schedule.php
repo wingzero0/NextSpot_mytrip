@@ -13,7 +13,7 @@ class Schedule extends CI_Controller {
 			die();
 		}
 	}
-	function create(){
+	function CreateTrip(){
 		// create trip and it will echo ret_array object
 		// ret_array contain result flag, TripID, or sometimes with error_msg 
 
@@ -21,11 +21,12 @@ class Schedule extends CI_Controller {
 		$ret_array["TripID"] = -1;
 
 		if ( !isset($_POST["name"]) || !isset($_POST["start_time"]) 
-			|| !isset($_POST["end_time"]) || !isset($_POST["uid"]) ) {
+			|| !isset($_POST["end_time"]) || !isset($_POST["uid"]) 
+			|| !isset($_POST["trip_type"]) ) {
 				$ret_array["error_msg"] = "please specify the name, start_time, end time and uid in post method";
 				echo json_encode($ret_array);
 				return false;
-			}
+		}
 
 		if ( $this->Login_Model->isSamePeople($_POST["uid"]) == false ){
 			$ret_array["error_msg"] = "uid in post method does not match login uid";
@@ -37,30 +38,35 @@ class Schedule extends CI_Controller {
 			"name" => $_POST["name"],
 			"StartTime" => $_POST["start_time"],
 			"EndTime" => $_POST["end_time"],
-			"UID" => $_POST["uid"]
+			"TripType" => $_POST["trip_type"],
+			"OwnerID" => $_POST["uid"],
 		);
-		/*
-		$data = array(
-			"name" => $_GET["name"],
-			"StartTime" => $_GET["start_time"],
-			"EndTime" => $_GET["end_time"],
-			"UID" => $_GET["uid"]
-		);*/
+		
 		$this->load->model("SDatabase");
 		$ret = $this->SDatabase->TripInsertDB($data);
 		if ($ret == -1){
 			$ret_array["error_msg"] = "db error, Trip not found (create failed)";
 			echo json_encode($ret_array);
 			return false;
+		}
+		$ret_array["TripID"] = $ret;
+		
+		$data = array(
+			"UID" => $_POST["uid"],
+			"TripID" => $ret_array["TripID"],
+		);
+		$ret = $this->SDatabase->TakePartInInsertDB($data);
+		if ($ret !== true){
+			$ret_array["error_msg"] = "db error, TakePartIn table erro (create failed)";
+			echo json_encode($ret_array);
+			return false;
 		}else{
 			$ret_array["result"] = true;
-			$ret_array["TripID"] = $ret;
 			echo json_encode($ret_array);
 			return true;
 		}
-
 	}
-	function get_trips(){
+	function GetTrips(){
 		// get trips with specify UID and it will echo ret_array object
 		// ret_array contain result(true / false), TripList, 
 		// or sometimes with error_msg 
@@ -74,14 +80,16 @@ class Schedule extends CI_Controller {
 		if ($this->check_post_field($ret_array, $fields) == false){
 			return false;
 		}
+		
+		if ( $this->Login_Model->isSamePeople($_POST["uid"]) == false ){
+			$ret_array["error_msg"] = "uid in post method does not match login uid";
+			echo json_encode($ret_array);
+			return false;
+		}
 
 		$data = array(
 			"UID" => $_POST["uid"]
 		);
-		/* 
-		$data = array(
-			"UID" => $_GET["uid"]
-		);*/
 
 		$this->load->model("SDatabase");
 		$ret = $this->SDatabase->TripGetList($data);
@@ -97,7 +105,7 @@ class Schedule extends CI_Controller {
 			return true;
 		}
 	}
-	function update_trips(){
+	function UpdateTrips(){
 		// update trips with TripIDs and it will echo ret_array object
 		// ret_array contain result(true / false), 
 		// or sometimes with error_msg 
@@ -116,8 +124,20 @@ class Schedule extends CI_Controller {
 			$fields[] = "name_".$i;
 			$fields[] = "start_".$i;
 			$fields[] = "end_".$i;
+			$fields[] = "trip_type_".$i;
 		}
 		if ($this->check_post_field($ret_array, $fields) == false){
+			return false;
+		}
+
+		// security check
+		$TripIDs = array();
+		for($i = 1;$i<=$num;$i++){
+			$TripIDs[] = intval($_POST["trip_id_".$i]);
+		}
+		if ( $this->Login_Model->TripsAccessCheck($TripIDs) == false ){
+			$ret_array["error_msg"] = "Security Access error: trip_ids in post method cannot be accessed by login uid.";
+			echo json_encode($ret_array);
 			return false;
 		}
 
@@ -125,24 +145,15 @@ class Schedule extends CI_Controller {
 		//insert
 		$this->load->model("SDatabase");
 
-		//$num = intval($_GET["num"]);
 		for($i = 1;$i<=$num;$i++){
-
-			$TripID = $_POST["trip_id_".$i];
+			$TripID = intval($_POST["trip_id_".$i]);
 			$data = array(
 				"name" => $_POST["name_".$i],
 				"StartTime" => $_POST["start_".$i],
-				"EndTime" => $_POST["end_".$i]
+				"EndTime" => $_POST["end_".$i],
+				"TripType" => intval($_POST["trip_type_".$i])
 			);
 
-			/*
-			$TripID = $_GET["trip_id_".$i];
-			$data = array(
-				"name" => $_GET["name_".$i],
-				"StartTime" => $_GET["start_".$i],
-				"EndTime" => $_GET["end_".$i]
-			);
-			 */
 			$this->SDatabase->TripUpdateDB($TripID, $data);
 		}
 
@@ -150,7 +161,7 @@ class Schedule extends CI_Controller {
 		echo json_encode($ret_array);
 		return true;
 	}
-	function get_scenics(){
+	function GetScenics(){
 		// get scenics with specify TripID and it will echo ret_array object
 		// ret_array contain result(true / false), ScenicList, 
 		// or sometimes with error_msg 
@@ -164,13 +175,19 @@ class Schedule extends CI_Controller {
 			return false;
 		}
 
+		$TripIDs = array();
+		$TripIDs[] = intval($_POST["trip_id"]);
+
+		if ( $this->Login_Model->TripsAccessCheck($TripIDs) == false ){
+			$ret_array["error_msg"] = "Security Access error: trip_ids in post method cannot be accessed by login uid.";
+			echo json_encode($ret_array);
+			return false;
+		}
+
 		$data = array(
 			"TripID" => $_POST["trip_id"]
 		);
-		/*
-		$data = array(
-			"TripID" => $_GET["trip_id"]
-		);*/
+
 		$this->load->model("SDatabase");
 		$ret = $this->SDatabase->ScenicGetList($data);
 		if ($ret == NULL){
@@ -186,7 +203,7 @@ class Schedule extends CI_Controller {
 		}
 	}
 
-	function create_scenics(){
+	function CreateScenics(){
 		// create scenics with specify TripID and it will echo ret_array object
 		// ret_array contain result(true / false), ScenicIDList, 
 		// or sometimes with error_msg 
@@ -212,6 +229,12 @@ class Schedule extends CI_Controller {
 			return false;
 		}
 
+		$TripIDs[0] = $_POST["trip_id"];
+		if ( $this->Login_Model->TripsAccessCheck($TripIDs) == false ){
+			$ret_array["error_msg"] = "Security Access error: trip_ids in post method cannot be accessed by login uid.";
+			echo json_encode($ret_array);
+			return false;
+		}
 
 		//insert
 		$this->load->model("SDatabase");
@@ -227,15 +250,6 @@ class Schedule extends CI_Controller {
 				"Money" => $_POST["money_".$i],
 				"Note" => $_POST["note_".$i]
 			);
-			/*
-			$data = array(
-				"TripID" => $_GET["trip_id"],
-				"LocationID" => $_GET["location_id_".$i],
-				"StartTime" => $_GET["start_".$i],
-				"EndTime" => $_GET["end_".$i],
-				"Money" => $_GET["money_".$i],
-				"Note" => $_GET["note_".$i]
-			);*/
 			$ret_array["ScenicIDList"][$i] = $this->SDatabase->ScenicInsertDB($data);
 		}
 
@@ -243,7 +257,7 @@ class Schedule extends CI_Controller {
 		echo json_encode($ret_array);
 		return true;
 	}
-	function update_scenics(){
+	function UpdateScenics(){
 		// update scenics with ScenicIDs and it will echo ret_array object
 		// ret_array contain result(true / false), 
 		// or sometimes with error_msg 
@@ -269,6 +283,17 @@ class Schedule extends CI_Controller {
 			return false;
 		}
 
+		// security check
+		$scenicIDs = array();
+		for($i = 1;$i<=$num;$i++){
+			$scenicIDs[] = intval($_POST["scenic_id_".$i]);
+		}
+		if ( $this->Login_Model->ScenicsAccessCheck($scenicIDs) == false ){
+			$ret_array["error_msg"] = "Security Access error: scenic_ids in post method cannot be accessed by login uid.";
+			echo json_encode($ret_array);
+			return false;
+		}
+
 
 		//insert
 		$this->load->model("SDatabase");
@@ -284,15 +309,6 @@ class Schedule extends CI_Controller {
 				"Money" => $_POST["money_".$i],
 				"Note" => $_POST["note_".$i]
 			);
-			/*
-			$ScenicID = $_GET["scenic_id_".$i];
-			$data = array(
-				"LocationID" => $_GET["location_id_".$i],
-				"StartTime" => $_GET["start_".$i],
-				"EndTime" => $_GET["end_".$i],
-				"Money" => $_GET["money_".$i],
-				"Note" => $_GET["note_".$i]
-			);*/
 			$this->SDatabase->ScenicUpdateDB($ScenicID, $data);
 			//$ret_array["ScenicIDList"][$i] = $this->SDatabase->ScenicInsertDB($data);
 		}

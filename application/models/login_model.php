@@ -50,7 +50,60 @@ class Login_Model extends CI_Model{
 			return true;
 		}else{
 			return false;
+		}	
+	}
+	public function TripsAccessCheck($TripIDs){
+		if ($this->_isLogin() == false){
+			return false;
 		}
+		$loginid = $this->session->userdata('NSid');
+		// load tb TakePartIn
+		$this->load->database();
+		foreach ($TripIDs as $tid){
+			$sql = sprintf("
+				select * from `TakePartIn`
+				where `UID` = %d and `TripID` = %d
+				", $loginid, $tid);
+			$query = $this->db->query($sql);
+			if ($query->num_rows() != 1){
+				return false;
+			}
+		}
+		return true;
+	}
+	public function ScenicsAccessCheck($scenicIDs){
+		if ($this->_isLogin() == false){
+			return false;
+		}
+		$loginid = $this->session->userdata('NSid');
+		// load tb TakePartIn
+		$this->load->database();
 		
+		$sql = sprintf("
+			select `ScenicID` from `Scenic` where `TripID` in (
+				select `TripID` from `TakePartIn` 
+				where `UID` = '%s'
+			)
+			", $loginid);
+		$query = $this->db->query($sql);
+		$validIDs = array();
+		foreach($query->result as $row){
+			$validIDs[] = intval($row->ScenicID);
+		}
+
+		foreach($scenicIDs as $sid) {
+			$flag = false;
+			foreach($validIDs as $vid){
+				if ($sid == $vid){
+					$flag = true;
+				}
+			}
+			if ( $flag ==  false){
+				// one input id is inv.lid
+				return false;
+			}
+		}
+		// all IDs are valid
+		return true;
 	}
 }

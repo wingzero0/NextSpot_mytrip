@@ -38,7 +38,7 @@ class Login extends CI_Controller {
 			return true;
 		}
 		$ret_array["fb_login_url"] = $this->Facebook_Handshaking->get_login_url();
-		$ret_array["ns_login_url"] = "http://kit.csie.ntu.edu.tw";
+		$ret_array["ns_login_url"] = "http://kit.csie.ntu.edu.tw/development/";
 		//printf("<p><a href=%s>login</a></p>",$ret_array["fb_login_url"]);
 		echo json_encode($ret_array);
 	}
@@ -84,6 +84,15 @@ class Login extends CI_Controller {
 		echo json_encode($ret_array);
 		 
 	}
+	public function FakeLogin(){
+		$newdata = array(
+	      'NSid'  => 1,
+	      'Name'     => "WengKit",
+	      'IdType' => 'FB',
+	      'logged_in' => TRUE
+      );
+		$this->session->set_userdata($newdata);
+	}
 	private function RegisterFbAccount($profile){
 		// set up session and register db record
 		if ($profile == false){
@@ -111,12 +120,11 @@ class Login extends CI_Controller {
 			//print_r($profile);
 			$this->RegisterFbAccount($profile);
 			$this->load->helper('url');
-			redirect("http://kit.csie.ntu.edu.tw/NextSpot/", 'refresh');
+			redirect("http://kit.csie.ntu.edu.tw/NextSpotDevelopment/", 'refresh');
 			return true; // capture login
 		}
 		return false; // not fb redircet
 	}
 }
-/* End of file welcome.php */
-/* Location: ./application/controllers/welcome.php */
+
 ?>

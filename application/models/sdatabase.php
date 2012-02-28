@@ -81,9 +81,12 @@ class SDatabase extends CI_Model{
 	public function TripGetList($data){
 		// get the TripID
 		$sql = sprintf("
-			select `TripID`, `name`, `StartTime`, `EndTime` 
+			select `TripID`, `name`, `StartTime`, `EndTime`, `TripType`, `OwnerID`
 			from `Trip` 
-			where `UID` = '%s'", 
+			where `TripID` in (
+				select `TripID` from `TakePartIn`
+				where `UID` = %d
+			)", 
 			$data["UID"]);
 		
 		$ret = $this->db->query($sql);
@@ -156,6 +159,10 @@ class SDatabase extends CI_Model{
 		$this->db->query($sql);
 			
 		return $NSid;
+	}
+	public function TakePartInInsertDB($data){
+		$this->db->insert("TakePartIn", $data);
+		return true;
 	}
 }
 ?>
