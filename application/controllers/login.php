@@ -120,7 +120,7 @@ class Login extends CI_Controller {
 			//print_r($profile);
 			$this->RegisterFbAccount($profile);
 			$this->load->helper('url');
-			redirect("http://kit.csie.ntu.edu.tw/NextSpotDevelopment/", 'refresh');
+			redirect("http://kit.csie.ntu.edu.tw/NextSpot/", 'refresh');
 			return true; // capture login
 		}
 		return false; // not fb redircet
